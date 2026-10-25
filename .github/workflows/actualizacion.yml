@@ -1,0 +1,37 @@
+name: Generador Diario GUIVER Research
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Se ejecuta todos los días a las 06:00 UTC
+  workflow_dispatch: # Permite ejecutarlo manualmente con un botón
+
+jobs:
+  actualizar-reporte:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Da permiso al bot para guardar el nuevo HTML
+
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar librería de Gemini
+        run: pip install google-generativeai
+
+      - name: Generar Reporte con Inteligencia Artificial
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python generar_reporte.py
+
+      - name: Guardar cambios en index.html y subir a la web
+        run: |
+          git config --global user.name "GUIVER-Bot"
+          git config --global user.email "bot@guiver.local"
+          git add index.html
+          git commit -m "Reporte Deep Dive diario publicado automáticamente" || exit 0
+          git push
